@@ -36,21 +36,29 @@ begin
                     when "001" =>
                         alu_op_o <= "00001"; -- or
                     when "010" =>
-                        alu_op_o <= "00010"; -- add
                         if funct7_5_s = '1' then
                             alu_op_o <= "00110"; -- sub
+                        else
+                            alu_op_o <= "00010"; -- add
                         end if;
                     when "111" =>
-                        alu_op_o <= "00101"; -- slt
-                end case;
-            when "10" =>
-                case funct3_i is
-                    when "010" =>
-                        alu_op_o <= "00101"; -- slt
-                    when "011" =>
-                        alu_op_o <= "00111"; -- slti
-                end case;
+                alu_op_o <= "00101"; -- slt
+            when others =>
+                alu_op_o <= "00010"; -- add 
         end case;
+    when "10" =>
+        case funct3_i is
+            when "010" =>
+                alu_op_o <= "00101"; -- slt
+            when "011" =>
+                alu_op_o <= "00111"; -- slti
+            when others =>
+                alu_op_o <= "00101"; -- slt 
+        end case;
+    when others =>
+        alu_op_o <= "00010"; -- add 
+end case;
+
     end process alu_dec;
    
 end architecture behavioral;
