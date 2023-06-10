@@ -21,7 +21,7 @@ end entity;
 
 architecture structural of TOP_RISCV is
   -- Signals for connecting the control path and data path
-  signal comp_s                   : signed;
+  signal comp_s                   : signed(DATA_WIDTH - 1 downto 0);
   signal instr_mem_read_op_s      : std_logic_vector (31 downto 0);
   signal mem_to_reg_s             : std_logic;
   signal alu_op_s                 : std_logic_vector (4 downto 0);
