@@ -52,7 +52,8 @@ begin
             alu_op_i            => alu_op_s,
             rd_we_i             => rd_we_s,
             pc_next_sel_i       => pc_next_sel_s,
-            alu_src_i           => alu_src_s 
+            alu_src_i           => alu_src_s,
+            branch_condition_o  => branch_condition_s
         );
          
          -- Control_path instance
@@ -63,11 +64,15 @@ begin
          reset               => reset,
          -- instruction is read from memory
          instruction_i       => instr_mem_read_i,
-         -- control signals for flushing
-         data_mem_we_o       => data_mem_we_o,
-         branch_condition_i  =>branch_condition_s
+         -- control signals are forwarded to data_path
+         mem_to_reg_o        => mem_to_reg_s,
+         alu_op_o            => alu_op_s,
+         alu_src_o         => alu_src_s,
+         rd_we_o             => rd_we_s,
+         pc_next_sel_o       => pc_next_sel_s,
+         -- control signals for forwarding
+         branch_condition_i  => branch_condition_s
          );
-   
    
 
 end architecture;
