@@ -51,12 +51,12 @@ architecture Behavioral of data_path is
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0);
    signal pc_reg_ex_s             : std_logic_vector (31 downto 0);
    signal immediate_extended_ex_s : std_logic_vector (31 downto 0);
-   signal alu_forward_a_ex_s      : std_logic_vector(31 downto 0);
-   signal alu_forward_b_ex_s      : std_logic_vector(31 downto 0);
    signal b_ex_s                  : std_logic_vector(31 downto 0);
    signal alu_result_ex_s         : std_logic_vector(31 downto 0);
    signal rs1_data_ex_s           : std_logic_vector (31 downto 0);
    signal rs2_data_ex_s           : std_logic_vector (31 downto 0);
+   signal adder_mux_PC            : std_logic_vector (31 downto 0);
+   signal pom_add_s               : std_logic_vector (31 downto 0);
    signal rd_address_ex_s         : std_logic_vector (4 downto 0);
 
    --*********       MEMORY        **************
@@ -70,33 +70,44 @@ architecture Behavioral of data_path is
    signal rd_data_wb_s            : std_logic_vector (31 downto 0);
    signal rd_address_wb_s         : std_logic_vector (4 downto 0);
    
-   signal comp_s                  :signed;
+   signal comp_s                  :signed(DATA_WIDTH - 1 downto 0);
 
 begin
 
      --***********  Combinational logic  ***************
 
+   --KOMPARATOR
+   komp:process(rs1_data_id_s,rs2_data_id_s)
+   begin
+    if(rs1_data_id_s=rs2_data_id_s)then
+        branch_condition_o<= '1';
+    else
+        branch_condition_o<='0';
+    end if;
+   end process; 
 
    --pc_adder_s update
    pc_adder_if_s <= std_logic_vector(unsigned(pc_reg_if_s) + to_unsigned(4, 32));
-
+   
+   --pomerac<<1
+   pom_add_s<=immediate_extended_id_s(DATA_WIDTH-2 downto 0)&'0';
+   
+   --adder_pc
+   adder_mux_PC <= std_logic_vector(unsigned(pom_add_s) + unsigned(pc_reg_if_s));
 
 
    --branch condition 
-   branch_condition_o <='1' when ((signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s))) else
+   branch_condition_o <='1' when ((signed(rs1_data_ex_s) = signed(rs2_data_ex_s))) else
                         '0';
    --pc_next mux
    with pc_next_sel_i select
       pc_next_if_s <=   pc_adder_if_s when '0',
-						alu_result_ex_s when others;
-
-
- 
+						adder_mux_PC when others;--tacnooo
 
    -- reg_bank rd_data update
 	with mem_to_reg_i select
 		rd_data_wb_s <=     extended_data_wb_s when '1',
-							alu_result_wb_s when others;
+							alu_result_ex_s when others;--NISAM SIGURAN
 
    -- extend data based on type of load instruction
    with instr_mem_read_i(14 downto 12) select
@@ -123,27 +134,30 @@ begin
          rs1_data_o    => rs1_data_id_s,
          rs2_data_o    => rs2_data_id_s,
          rd_address_i  => rd_address_wb_s,
-         rd_data_i     => rd_data_wb_s);
+         rd_data_i     => rd_data_wb_s); --TACNOOO
+         
+      --alu_mux
+   with alu_src_i select
+      b_ex_s  <=  rs2_data_ex_s when '0',
+						immediate_extended_ex_s when others;   --TACNOOO
 
    --Immediate
    imm1 : entity work.immediate
       port map (
          instruction_i        => instr_mem_read_i,
-         immediate_extended_o => immediate_extended_id_s);
+         immediate_extended_o => immediate_extended_id_s);--TACNOO
+         
 
    ALU1: entity work.ALU
       generic map (
          WIDTH => 32)
       port map (
-         a_i    => alu_forward_a_ex_s,
+         a_i    => rs1_data_id_s,
          b_i    => b_ex_s,
          op_i   => alu_op_i,
-         res_o  => alu_result_ex_s,
-         comp_i =>comp_s);
+         res_o  => alu_result_ex_s);--TACNOO
          
-	
-
-   --------------------Izlazi-------------------
+ --------------------Izlazi-------------------
    --From instruction memory
    instr_mem_address_o <= pc_reg_if_s;
    --To data memory
