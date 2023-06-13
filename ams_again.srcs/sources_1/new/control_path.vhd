@@ -88,14 +88,6 @@ begin
 
 
 
-
-
-
-
-
-
-
-
    --*********** Instantiation ******************
 
    -- Control decoder
@@ -106,8 +98,11 @@ begin
          mem_to_reg_o  => mem_to_reg_id_s,
          data_mem_we_o => data_mem_we_id_s,
          rd_we_o       => rd_we_id_s,
-
+         alu_src_o     => alu_src_b_id_s,
          alu_2bit_op_o => alu_2bit_op_id_s);
+         
+    --I_kolo
+        pc_next_sel_o<=branch_id_s and branch_condition_i ;
 
    -- ALU decoder
    alu_dec : entity work.alu_decoder(behavioral)
